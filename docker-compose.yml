@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:latest
+    ports:
+      - 15691:15691
+      - 15692:15692
+      - 25672:25672
+      - 4369:4369
+      - 5671:5671
+      - 5672:5672 
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASSWORD=guest
+    networks:
+      pubsub-network:
+        ipv4_address: 172.19.0.2
+
+  publisher:
+    build:
+      context: ./publisher-fastapi
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    environment:
+      - RABBITMQ_HOST=172.19.0.2
+    depends_on:
+      - rabbitmq
+    networks:
+      pubsub-network:
+        ipv4_address: 172.19.0.3
+  
+  subscriber1:
+    build:
+      context: ./subscriber-fastapi
+      dockerfile: Dockerfile
+    ports:
+      - 8001:8000
+    environment:
+      - RABBITMQ_HOST=172.19.0.2
+    depends_on:
+      - rabbitmq
+    networks:
+      pubsub-network:
+        ipv4_address: 172.19.0.4
+  
+  subscriber2:
+    build:
+      context: ./subscriber-fastapi
+      dockerfile: Dockerfile
+    ports:
+      - 8002:8000
+    environment:
+      - RABBITMQ_HOST=172.19.0.2
+    depends_on:
+      - rabbitmq
+    networks:
+      pubsub-network:
+        ipv4_address: 172.19.0.5
+
+networks:
+  pubsub-network:
+    driver: bridge
+    ipam:
+      config:
+        - gateway: 172.19.0.1
+          subnet: 172.19.0.0/16
